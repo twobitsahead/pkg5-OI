@@ -50,7 +50,7 @@
 # at a local disk.  If you wish to share the same ServerRoot for multiple
 # httpd daemons, you will need to change at least LockFile and PidFile.
 #
-ServerRoot "/usr/apache2/2.2"
+ServerRoot "/usr/apache2/2.4"
 PidFile "${runtime_dir}/../depot_httpd.pid"
 #
 # Listen: Allows you to bind Apache to specific IP addresses and/or
@@ -72,36 +72,25 @@ Listen ${host}:${port}
 # are actually available _before_ they are used.
 #
 
-<IfDefine 64bit>
-LoadModule authz_host_module libexec/64/mod_authz_host.so
-LoadModule log_config_module libexec/64/mod_log_config.so
-LoadModule ssl_module libexec/64/mod_ssl.so
-LoadModule mime_module libexec/64/mod_mime.so
-LoadModule dir_module libexec/64/mod_dir.so
-LoadModule alias_module libexec/64/mod_alias.so
-LoadModule rewrite_module libexec/64/mod_rewrite.so
-LoadModule headers_module libexec/64/mod_headers.so
-LoadModule env_module libexec/64/mod_env.so
-LoadModule wsgi_module libexec/64/mod_wsgi-2.7.so
-LoadModule cache_module libexec/64/mod_cache.so
-LoadModule disk_cache_module libexec/64/mod_disk_cache.so
-LoadModule deflate_module libexec/64/mod_deflate.so
-</IfDefine>
-<IfDefine !64bit>
-LoadModule authz_host_module libexec/mod_authz_host.so
-LoadModule log_config_module libexec/mod_log_config.so
-LoadModule ssl_module libexec/mod_ssl.so
-LoadModule mime_module libexec/mod_mime.so
-LoadModule dir_module libexec/mod_dir.so
+LoadModule access_compat_module libexec/mod_access_compat.so
 LoadModule alias_module libexec/mod_alias.so
-LoadModule rewrite_module libexec/mod_rewrite.so
-LoadModule headers_module libexec/mod_headers.so
-LoadModule env_module libexec/mod_env.so
-LoadModule wsgi_module libexec/mod_wsgi-2.7.so
+LoadModule authn_core_module libexec/mod_authn_core.so
+LoadModule authz_core_module libexec/mod_authz_core.so
+LoadModule authz_host_module libexec/mod_authz_host.so
 LoadModule cache_module libexec/mod_cache.so
-LoadModule disk_cache_module libexec/mod_disk_cache.so
+LoadModule cache_disk_module libexec/mod_cache_disk.so
 LoadModule deflate_module libexec/mod_deflate.so
-</IfDefine>
+LoadModule filter_module libexec/mod_filter.so
+LoadModule dir_module libexec/mod_dir.so
+LoadModule env_module libexec/mod_env.so
+LoadModule headers_module libexec/mod_headers.so
+LoadModule log_config_module libexec/mod_log_config.so
+LoadModule mime_module libexec/mod_mime.so
+LoadModule rewrite_module libexec/mod_rewrite.so
+LoadModule ssl_module libexec/mod_ssl.so
+LoadModule socache_shmcb_module libexec/mod_socache_shmcb.so
+LoadModule unixd_module libexec/mod_unixd.so
+LoadModule wsgi_module libexec/mod_wsgi-2.7.so
 
 # Turn on deflate for file types that support it
 AddOutputFilterByType DEFLATE text/html application/javascript text/css text/plain
@@ -196,8 +185,7 @@ DocumentRoot "${runtime_dir}/htdocs"
 <Directory />
     Options FollowSymLinks
     AllowOverride None
-    Order deny,allow
-    Deny from all
+    Require all denied
 </Directory>
 
 #
@@ -220,7 +208,7 @@ DocumentRoot "${runtime_dir}/htdocs"
     # doesn't give it to you.
     #
     # The Options directive is both complicated and important.  Please see
-    # http://httpd.apache.org/docs/2.2/mod/core.html#options
+    # http://httpd.apache.org/docs/2.4/mod/core.html#options
     # for more information.
     #
     Options FollowSymLinks
@@ -235,8 +223,7 @@ DocumentRoot "${runtime_dir}/htdocs"
     #
     # Controls who can get stuff from this server.
     #
-    Order allow,deny
-    Allow from all
+    Require all granted
 
 </Directory>
 
@@ -245,7 +232,7 @@ DocumentRoot "${runtime_dir}/htdocs"
     SetHandler wsgi-script
     WSGIProcessGroup pkgdepot
     Options ExecCGI
-    Allow from all
+    Require all granted
 </Directory>
 
 #
@@ -261,9 +248,7 @@ DocumentRoot "${runtime_dir}/htdocs"
 # viewed by Web clients.
 #
 <FilesMatch "^\.ht">
-    Order allow,deny
-    Deny from all
-    Satisfy All
+    Require all denied
 </FilesMatch>
 
 #
@@ -280,7 +265,7 @@ ErrorLog "${log_dir}/error_log"
 # Possible values include: debug, info, notice, warn, error, crit,
 # alert, emerg.
 #
-LogLevel warn
+LogLevel warn rewrite:debug
 
 <IfModule log_config_module>
     #
@@ -308,19 +293,8 @@ LogLevel warn
     # If you prefer a logfile with access, agent, and referer information
     # (Combined Logfile Format) you can use the following directive.
     #
-    #CustomLog "/var/apache2/2.2/logs/access_log" combined
+    #CustomLog "/var/apache2/2.4/logs/access_log" combined
 </IfModule>
-
-#
-# DefaultType: the default MIME type the server will use for a document
-# if it cannot otherwise determine one, such as from filename extensions.
-# If your server contains mostly text or HTML documents, "text/plain" is
-# a good value.  If most of your content is binary, such as applications
-# or images, you may want to use "application/octet-stream" instead to
-# keep browsers from trying to display binary files as though they are
-# text.
-#
-DefaultType text/plain
 
 #
 # Note: The following must must be present to support
@@ -502,6 +476,6 @@ RewriteRule ^${sroot}/repos.shtml$ ${sroot}/depot/repos.shtml [NE,PT]
         if not test_proto:
                 context.write("""
 # Include any site-specific configuration
-Include /etc/pkg/depot/conf.d/*.conf
+IncludeOptional /etc/pkg/depot/conf.d/*.conf
 """)
 %>

@@ -32,8 +32,6 @@
 import urllib
 %>
 RewriteEngine on
-RewriteLog "${log_dir}/rewrite.log"
-RewriteLogLevel 0
 
 # We need to allow these as they're encoded in the package/manifest names
 # when looking up v4 repositories
@@ -207,9 +205,7 @@ for pub, repo_path, repo_prefix, writable_root in pubs:
 for repo_path, repo_prefix in paths:
         context.write("# an alias to serve {repo_path} content.\n"
             "<Directory \"{repo_path}\">\n"
-            "    AllowOverride None\n"
-            "    Order allow,deny\n"
-            "    Allow from all\n"
+            "    Require all granted\n"
             "</Directory>\n".format(**locals()))
 %>
 
@@ -230,9 +226,7 @@ for repo_prefix in repo_prefixes:
                      **locals()))
                 context.write(
                     "<Directory \"{runtime_dir}/htdocs\">\n"
-                    "    AllowOverride None\n"
-                    "    Order allow,deny\n"
-                    "    Allow from all\n"
+                    "    Require all granted\n"
                     "</Directory>\n".format(**locals()))
 %>
 
