@@ -24,7 +24,7 @@
 # at a local disk.  If you wish to share the same ServerRoot for multiple
 # httpd daemons, you will need to change at least LockFile and PidFile.
 #
-ServerRoot "/usr/apache2/2.2"
+ServerRoot "/usr/apache2/2.4"
 PidFile "${sysrepo_runtime_dir}/../sysrepo_httpd.pid"
 #
 # Listen: Allows you to bind Apache to specific IP addresses and/or
@@ -45,41 +45,26 @@ Listen ${host}:${port}
 # are actually available _before_ they are used.
 #
 
-<IfDefine 64bit>
-LoadModule authz_host_module libexec/64/mod_authz_host.so
-LoadModule cache_module libexec/64/mod_cache.so
-LoadModule disk_cache_module libexec/64/mod_disk_cache.so
-LoadModule mem_cache_module libexec/64/mod_mem_cache.so
-LoadModule log_config_module libexec/64/mod_log_config.so
-LoadModule proxy_module libexec/64/mod_proxy.so
-LoadModule proxy_connect_module libexec/64/mod_proxy_connect.so
-LoadModule proxy_http_module libexec/64/mod_proxy_http.so
-LoadModule ssl_module libexec/64/mod_ssl.so
-LoadModule mime_module libexec/64/mod_mime.so
-LoadModule dir_module libexec/64/mod_dir.so
-LoadModule alias_module libexec/64/mod_alias.so
-LoadModule rewrite_module libexec/64/mod_rewrite.so
-LoadModule env_module libexec/64/mod_env.so
-LoadModule wsgi_module libexec/64/mod_wsgi-2.7.so
-</IfDefine>
-
-<IfDefine !64bit>
+LoadModule access_compat_module libexec/mod_access_compat.so
+LoadModule alias_module libexec/mod_alias.so
+LoadModule authn_core_module libexec/mod_authn_core.so
+LoadModule authz_core_module libexec/mod_authz_core.so
 LoadModule authz_host_module libexec/mod_authz_host.so
 LoadModule cache_module libexec/mod_cache.so
-LoadModule disk_cache_module libexec/mod_disk_cache.so
-LoadModule mem_cache_module libexec/mod_mem_cache.so
+LoadModule cache_disk_module libexec/mod_cache_disk.so
+LoadModule cache_socache_module libexec/mod_cache_socache.so
+LoadModule dir_module libexec/mod_dir.so
+LoadModule env_module libexec/mod_env.so
 LoadModule log_config_module libexec/mod_log_config.so
+LoadModule mime_module libexec/mod_mime.so
 LoadModule proxy_module libexec/mod_proxy.so
 LoadModule proxy_connect_module libexec/mod_proxy_connect.so
 LoadModule proxy_http_module libexec/mod_proxy_http.so
-LoadModule ssl_module libexec/mod_ssl.so
-LoadModule mime_module libexec/mod_mime.so
-LoadModule dir_module libexec/mod_dir.so
-LoadModule alias_module libexec/mod_alias.so
 LoadModule rewrite_module libexec/mod_rewrite.so
-LoadModule env_module libexec/mod_env.so
+LoadModule ssl_module libexec/mod_ssl.so
+LoadModule socache_memcache_module libexec/mod_socache_memcache.so
+LoadModule unixd_module libexec/mod_unixd.so
 LoadModule wsgi_module libexec/mod_wsgi-2.7.so
-</IfDefine>
 
 # We only alias a specific script, not all files in ${sysrepo_template_dir}
 WSGIScriptAlias /wsgi_p5p ${sysrepo_template_dir}/sysrepo_p5p.py
@@ -91,6 +76,7 @@ LimitRequestBody 102400
 # ensure our wsgi application can get its runtime directory
 SetEnv SYSREPO_RUNTIME_DIR ${sysrepo_runtime_dir}
 
+<IfModule unixd_module>
 #
 # If you wish httpd to run as a different user or group, you must run
 # httpd as root initially and it will switch.
@@ -101,6 +87,8 @@ SetEnv SYSREPO_RUNTIME_DIR ${sysrepo_runtime_dir}
 #
 User pkg5srv
 Group pkg5srv
+
+</IfModule>
 
 # 'Main' server configuration
 #
@@ -131,25 +119,14 @@ ServerAdmin you@example.com
 ServerName ${host}
 
 #
-# DocumentRoot: The directory out of which you will serve your
-# documents. By default, all requests are taken from this directory, but
-# symbolic links and aliases may be used to point to other locations.
-#
-DocumentRoot "${sysrepo_runtime_dir}/htdocs"
-
-#
-# Each directory to which Apache has access can be configured with respect
-# to which services and features are allowed and/or disabled in that
-# directory (and its subdirectories).
-#
-# First, we configure the "default" to be a very restrictive set of
-# features.
+# Deny access to the entirety of your server's filesystem. You must
+# explicitly permit access to web content directories in other 
+# <Directory> blocks below.
 #
 <Directory />
     Options FollowSymLinks
     AllowOverride None
-    Order deny,allow
-    Deny from all
+    Require all denied
 </Directory>
 
 #
@@ -159,6 +136,14 @@ DocumentRoot "${sysrepo_runtime_dir}/htdocs"
 # below.
 #
 
+#
+# DocumentRoot: The directory out of which you will serve your
+# documents. By default, all requests are taken from this directory, but
+# symbolic links and aliases may be used to point to other locations.
+#
+DocumentRoot "${sysrepo_runtime_dir}/htdocs"
+
+#
 #
 # This should be changed to whatever you set DocumentRoot to.
 #
@@ -172,7 +157,7 @@ DocumentRoot "${sysrepo_runtime_dir}/htdocs"
     # doesn't give it to you.
     #
     # The Options directive is both complicated and important.  Please see
-    # http://httpd.apache.org/docs/2.2/mod/core.html#options
+    # http://httpd.apache.org/docs/2.4/mod/core.html#options
     # for more information.
     #
     Options FollowSymLinks
@@ -187,8 +172,8 @@ DocumentRoot "${sysrepo_runtime_dir}/htdocs"
     #
     # Controls who can get stuff from this server.
     #
-    Order allow,deny
-    Allow from 127.0.0.1
+
+    Require local
 
 </Directory>
 
@@ -197,7 +182,7 @@ DocumentRoot "${sysrepo_runtime_dir}/htdocs"
     SetHandler wsgi-script
     WSGIProcessGroup sysrepo
     Options ExecCGI
-    Allow from 127.0.0.1
+    Require local
 </Directory>
 
 #
@@ -212,11 +197,9 @@ DocumentRoot "${sysrepo_runtime_dir}/htdocs"
 # The following lines prevent .htaccess and .htpasswd files from being
 # viewed by Web clients.
 #
-<FilesMatch "^\.ht">
-    Order allow,deny
-    Deny from all
-    Satisfy All
-</FilesMatch>
+<Files ".ht*">
+    Require all denied
+</Files>
 
 #
 # ErrorLog: The location of the error log file.
@@ -232,7 +215,7 @@ ErrorLog "${sysrepo_log_dir}/error_log"
 # Possible values include: debug, info, notice, warn, error, crit,
 # alert, emerg.
 #
-LogLevel warn
+LogLevel warn rewrite:debug
 
 <IfModule log_config_module>
     #
@@ -260,19 +243,8 @@ LogLevel warn
     # If you prefer a logfile with access, agent, and referer information
     # (Combined Logfile Format) you can use the following directive.
     #
-    #CustomLog "/var/apache2/2.2/logs/access_log" combined
+    #CustomLog "/var/apache2/2.4/logs/access_log" combined
 </IfModule>
-
-#
-# DefaultType: the default MIME type the server will use for a document
-# if it cannot otherwise determine one, such as from filename extensions.
-# If your server contains mostly text or HTML documents, "text/plain" is
-# a good value.  If most of your content is binary, such as applications
-# or images, you may want to use "application/octet-stream" instead to
-# keep browsers from trying to display binary files as though they are
-# text.
-#
-DefaultType text/plain
 
 #
 # Note: The following must must be present to support
@@ -285,21 +257,26 @@ SSLRandomSeed connect builtin
 </IfModule>
 
 RewriteEngine on
+# With version 2.2.23 or later of httpd, mod_rewrite will only process the
+# rewrite rules if the request URI is a URL-path. To lift the restriction on
+# matching a URL-path, enable AllowAnyURI to allow our HTTP->HTTPS rewrites
+# to work.
+RewriteOptions AllowAnyURI
 
 <%doc> #
        # Specify http and https proxies if we need them
        # values are urls of the form http://<hostname>:[port]
 </%doc>
-% if http_proxy != None:
+% if http_proxy is not None:
 ProxyRemote http ${http_proxy}
 % endif
-% if https_proxy != None:
+% if https_proxy is not None:
 ProxyRemote https ${https_proxy}
 % endif
 <%doc> #
        # If we supplied proxies, then these override all per-repository proxies.
        # </%doc>
-% if http_proxy == None and https_proxy == None:
+% if http_proxy is None and https_proxy is None:
         % for uri in reversed(sorted(uri_pub_map.keys())):
                 % for pub, cert_path, key_path, hash, proxy, utype in uri_pub_map[uri]:
 <%
@@ -315,15 +292,15 @@ ProxyRemote https ${https_proxy}
 <%doc> #
        # We only perform caching if cache_dir is set.  It need to be set to
        # an absolute path to a directory writable by the apache process.
-       # Alternatively, if set to 'memory', we enable mod_mem_cache.
+       # Alternatively, if set to 'memory', we enable mod_cache_socache.
        #
 </%doc>
-% if cache_dir != None:
+% if cache_dir is not None:
 <IfModule mod_cache.c>
 % if cache_dir.startswith("/"):
-<IfModule mod_disk_cache.c>
+<IfModule mod_cache_disk.c>
 CacheRoot ${cache_dir}
-CacheEnable disk /
+CacheEnable disk http://*:
 # The levels and length of the cache directories can
 # be small here, as ZFS is good at dealing with directories
 # containing many files.
@@ -334,25 +311,21 @@ CacheDirLength 2
 CacheMaxFileSize 45690876
 </IfModule>
 % elif cache_dir == "memory":
-CacheEnable mem /
-MCacheSize ${cache_size}
+CacheEnable socache http://*:
+CacheSocache memcache:${cache_dir}/scache
 # cache a suitably large number of files
-MCacheMaxObjectCount 200000
-MCacheMinObjectSize 1
-MCacheMaxObjectSize 45690876
+CacheSocacheReadSize 1
+CacheSocacheMaxSize 45690876
 % endif
-CacheDisable /versions
-CacheDisable /syspub
+CacheDisable http://*:/versions
+CacheDisable http://*:/syspub
 <%
 	for p in sorted(set(v[0] for l in uri_pub_map.values() for v in l )):
-	        context.write("CacheDisable /{0}/catalog\n".format(p))
+	     context.write("CacheDisable http://*:/{0}/catalog\n".format(p))
 %>
 
 </IfModule>
 % endif
-
-RewriteLog "${sysrepo_log_dir}/rewrite.log"
-RewriteLogLevel 0
 
 # We need to allow these as they're encoded in the package/manifest names
 # when looking up file:// repositories
@@ -364,10 +337,8 @@ SSLProxyEngine on
 SSLProxyMachineCertificateFile ${sysrepo_runtime_dir}/crypto.txt
 SSLProxyProtocol all
 
-<Proxy *>
-       Order deny,allow
-       Deny from all
-       Allow from 127.0.0.1
+<Proxy "*">
+    Require local
 </Proxy>
 
 <%doc>
@@ -382,7 +353,7 @@ SSLProxyProtocol all
 </%doc>
 
 % for uri in reversed(sorted(uri_pub_map.keys())):
-        % for pub, cert_path, key_path, hash, proxy, utype in uri_pub_map[uri]:
+       % for pub, cert_path, key_path, hash, proxy, utype in uri_pub_map[uri]:
 <%doc>
                 # for any https publishers, we want to allow proxy clients
                 # access the repos using the key/cert from the sysrepo
@@ -487,14 +458,13 @@ SSLProxyProtocol all
                       context.write("# a file repository alias to serve {uri} content.\n"
                           "<Directory \"{repo_path}\">\n"
                           "    AllowOverride None\n"
-                          "    Order allow,deny\n"
-                          "    Allow from 127.0.0.1\n"
+                          "    Require local\n"
                           "</Directory>\n".format(**locals()))
 %>
-                      % if cache_dir != None:
-CacheDisable /${pub}/${hash}/catalog
-CacheDisable /${pub}/${hash}/publisher
-CacheDisable /${pub}/${hash}/versions
+                      % if cache_dir is not None:
+CacheDisable http://*:/${pub}/${hash}/catalog
+CacheDisable http://*:/${pub}/${hash}/publisher
+CacheDisable http://*:/${pub}/${hash}/versions
                       % endif
 Alias /${pub}/${hash} ${repo_path}
                 % endif

@@ -205,7 +205,7 @@ Specify the type of web server that \fBpkg.depot-config\fR should output configu
 .ad
 .sp .6
 .RS 4n
-Produce a partial configuration that enables a web server to serve basic \fBpkg\fR(5) installation operations for clients using an existing web service. For an Apache web server running on the OpenIndiana, the partial configuration file could be placed in \fB/etc/apache2/2.2/conf.d\fR. For other operating systems, consult your OS documentation to determine how to use this partial configuration file. See also the \fB-P\fR option.
+Produce a partial configuration that enables a web server to serve basic \fBpkg\fR(5) installation operations for clients using an existing web service. For an Apache web server running on the OpenIndiana, the partial configuration file could be placed in \fB/etc/apache2/2.4/conf.d\fR. For other operating systems, consult your OS documentation to determine how to use this partial configuration file. See also the \fB-P\fR option.
 .RE
 
 .sp
@@ -352,7 +352,7 @@ online   Feb_03   svc:/application/pkg/server:userland
 \fBExample 2 \fRShowing Processes Associated With the Depot
 .sp
 .LP
-The following command shows \fBhttpd.worker\fR processes associated with the \fBpkg/depot\fR service.
+The following command shows \fBhttpd\fR processes associated with the \fBpkg/depot\fR service.
 
 .sp
 .in +2
@@ -360,12 +360,12 @@ The following command shows \fBhttpd.worker\fR processes associated with the \fB
 $ \fBsvcs -p pkg/depot\fR
 STATE    STIME    FMRI
 online   16:59:49 svc:/application/pkg/depot:default
-         16:59:48     6731 httpd.worker
-         16:59:48     6736 httpd.worker
-         16:59:48     6737 httpd.worker
-         16:59:48     6738 httpd.worker
-         17:00:05     6744 httpd.worker
-         17:05:59     6915 httpd.worker
+         16:59:48     6731 httpd
+         16:59:48     6736 httpd
+         16:59:48     6737 httpd
+         16:59:48     6738 httpd
+         17:00:05     6744 httpd
+         17:05:59     6915 httpd
 .fi
 .in -2
 .sp

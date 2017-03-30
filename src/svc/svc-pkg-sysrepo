@@ -25,25 +25,11 @@
 
 . /lib/svc/share/smf_include.sh
 
-APACHE_HOME=/usr/apache2/2.2
+APACHE_HOME=/usr/apache2/2.4
 APACHE_ETC_ROOT=/etc/pkg/sysrepo
 APACHE_BIN=${APACHE_HOME}/bin
 
-#
-# Calling $APACHE_BIN/apachectl would source $APACHE_BIN/envvars, which
-# in turn would source /etc/apache2/2.2/envvars, if it exists.
-#
-# We want to keep the system-repository service completely separate from
-# the site system configuration used by svc:/network/http:apache22 avoiding
-# /etc/apache2, which means we must avoid apachectl.
-#
-# In this method script, we call httpd directly instead, but as a result,
-# we also need to include the relevant contents of $APACHE_BIN/envvars -
-# setting $LD_LIBRARY_PATH as it does.
-#
-HTTPD=${APACHE_BIN}/httpd.worker
-LD_LIBRARY_PATH=${APACHE_HOME}/lib/64:${LD_LIBRARY_PATH}
-export LD_LIBRARY_PATH
+HTTPD=${APACHE_BIN}/apachectl
 
 getprop() {
     PROPVAL=""
@@ -105,7 +91,7 @@ run_htcacheclean() {
                # nice about scheduling and removing empty directories if
                # necessary.
 	       interval=$((60 * 24 * 14))
-               /usr/apache2/2.2/bin/htcacheclean \
+               /usr/apache2/2.4/bin/htcacheclean \
                        -d${interval} -i -l ${SYSREPO_CACHE_MAX}M -n \
                        -p ${SYSREPO_CACHE_DIR} \
                        -P ${SYSREPO_CACHE_DIR}/../sysrepo_htcacheclean.pid \
