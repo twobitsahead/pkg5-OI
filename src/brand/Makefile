@@ -36,6 +36,7 @@ ROOTBRAND = $(ROOTUSRLIB)/brand
 ROOTBRANDPKG = $(ROOTBRAND)/ipkg
 ROOTBRANDNLIPKG = $(ROOTBRAND)/nlipkg
 KVMBRANDPKG = $(ROOTBRAND)/kvm
+BHYVEBRANDPKG = $(ROOTBRAND)/bhyve
 
 LINKBRANDPKG = /usr/lib/brand/ipkg
 
@@ -48,7 +49,8 @@ ROOTDIRS = \
 	$(ROOTBRAND) \
 	$(ROOTBRANDPKG) \
 	$(ROOTBRANDNLIPKG) \
-	$(KVMBRANDPKG)
+	$(KVMBRANDPKG) \
+	$(BHYVEBRANDPKG)
 
 ROOTFILES = \
 	$(ROOTETCBRAND)/pkgrm.conf \
@@ -73,11 +75,22 @@ ROOTFILES = \
 	$(ROOTBRANDNLIPKG)/config.xml \
 	$(KVMBRANDPKG)/config.xml \
 	$(KVMBRANDPKG)/platform.xml \
-	$(KVMBRANDPKG)/createzone \
 	$(KVMBRANDPKG)/init \
 	$(KVMBRANDPKG)/socat \
-	$(KVMBRANDPKG)/support
-	
+	$(KVMBRANDPKG)/support \
+	$(KVMBRANDPKG)/createzone \
+	$(BHYVEBRANDPKG)/createzone \
+	$(BHYVEBRANDPKG)/config.xml \
+	$(BHYVEBRANDPKG)/platform.xml \
+	$(BHYVEBRANDPKG)/init \
+	$(BHYVEBRANDPKG)/socat \
+	$(BHYVEBRANDPKG)/support \
+	$(BHYVEBRANDPKG)/uninstall \
+	$(BHYVEBRANDPKG)/firewall.ksh \
+	$(BHYVEBRANDPKG)/util.ksh \
+	$(BHYVEBRANDPKG)/log.ksh \
+	$(BHYVEBRANDPKG)/image.ksh \
+	$(BHYVEBRANDPKG)/vars.ksh
 
 BIN = \
 	support \
@@ -107,7 +120,7 @@ install: $(ROOTFILES)
 
 
 $(ROOT) $(ROOTETC) $(ROOTETCBRAND) $(ROOTETCZONES) $(ROOTUSRLIB) \
-	$(ROOTBRAND) $(ROOTBRANDPKG) $(ROOTBRANDNLIPKG) $(KVMBRANDPKG):
+	$(ROOTBRAND) $(ROOTBRANDPKG) $(ROOTBRANDNLIPKG) $(KVMBRANDPKG) $(BHYVEBRANDPKG):
 	mkdir -p $@
 
 $(ROOTBRANDNLIPKG)/config.xml: $(ROOTBRANDNLIPKG) config.xml
@@ -125,3 +138,12 @@ $(ROOTBRANDPKG)/%: $(ROOTBRANDPKG) %
 
 $(KVMBRANDPKG)/%: $(KVMBRANDPKG) kvm/%
 	rm -f $@; $(INSTALL) -f $(KVMBRANDPKG) -m 0444 $<
+
+$(BHYVEBRANDPKG)/%: $(BHYVEBRANDPKG) bhyve/%
+	rm -f $@; $(INSTALL) -f $(BHYVEBRANDPKG) -m 0444 $<
+
+$(BHYVEBRANDPKG)/createzone: $(BHYVEBRANDPKG)
+	rm -f $@; $(INSTALL) -f $(BHYVEBRANDPKG) -m 0444 kvm/createzone
+
+$(BHYVEBRANDPKG)/socat: $(BHYVEBRANDPKG)
+	rm -f $@; $(INSTALL) -f $(BHYVEBRANDPKG) -m 0444 kvm/socat
