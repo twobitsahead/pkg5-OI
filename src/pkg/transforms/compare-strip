@@ -30,7 +30,7 @@
 # the wrong /usr/lib/pythonXY in the proto area, remove them.
 #
 # We always check PYDIRVP (the default python) and hard-code the "other" to drop.
-<transform file path=$(PYDIRVP)/.*/.*cpython-39.pyc -> drop>
+<transform file path=$(PYDIRVP)/.*/.*cpython-35.pyc -> drop>
 
 # Reduce manifests to the bare minimum; we don't really care about anything
 # but path.

@@ -57,7 +57,7 @@ clobber: $(SUBDIRS) $(PYVERSONS)
 packages: install
 	@cd pkg; pwd; $(MAKE) $(TARGET) check \
 		PATH=$$(hg root 2>/dev/null || git rev-parse --show-toplevel)/proto/root_$$(uname -p)/usr/bin:$$PATH \
-		PYTHONPATH=$$(hg root 2>/dev/null || git rev-parse --show-toplevel)/proto/root_$$(uname -p)/usr/lib/python2.7/vendor-packages
+		PYTHONPATH=$$(hg root 2>/dev/null || git rev-parse --show-toplevel)/proto/root_$$(uname -p)/usr/lib/python3.9/vendor-packages
 
 test: install .WAIT $(PYTESTS)
 

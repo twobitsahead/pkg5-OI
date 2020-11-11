@@ -1,4 +1,4 @@
-#!/usr/bin/python3.5
+#!/usr/bin/python3.9
 #
 # CDDL HEADER START
 #
@@ -244,7 +244,7 @@ class DirectoryAction(generic.Action):
                                             path)
                                         raise apx.ActionExecutionError(self,
                                             details=err_txt, error=e,
-                                            fmri=pkgplan.origin_fmri) 
+                                            fmri=pkgplan.origin_fmri)
                         elif e.errno == errno.EBUSY:
                                 # os.path.ismount() is broken for lofs
                                 # filesystems, so give a more generic
