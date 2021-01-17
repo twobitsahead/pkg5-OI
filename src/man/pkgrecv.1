@@ -1,6 +1,7 @@
 '\" te
+.\" Copyright 2015 Gary Mills
 .\" Copyright (c) 2007, 2015, Oracle and/or its affiliates. All rights reserved.
-.TH pkgrecv 1 "08 Oct 2015" "SunOS 5.11" "User Commands"
+.TH pkgrecv 1 "17 Jan 2021" "SunOS 5.11" "User Commands"
 .SH NAME
 pkgrecv \- Image Packaging System content retrieval utility
 .SH SYNOPSIS
@@ -502,12 +503,15 @@ $ \fBpkgrecv -s /my/archive.p5p -d /export/repo '*'\fR
 .LP
 Change the publisher name of the package 'foo' and all its
 dependencies into 'extra' during republishing.
+Backreferences can also be used in the replacement string of the
+transform but they are complex and error-prone.
 .sp
 .in +2
 .nf
 $ \fBecho '<transform set name=pkg.fmri -> edit value\fR
-  \fB(pkg://).*?(/.*) \\1extra\\2>' | \\\fR
-  \fBpkgrecv -s repo1 -d repo2 --mog-file - foo\fR
+  \fBpkg://[^/]+/ pkg://extra/>' > /tmp/x.tr\fR
+$ \fBpkgrecv -s repo1 -d repo2 --mog-file /tmp/x.tr foo\fR
+$ \fBpkgrepo rebuild -s repo2\fR
 .fi
 .in -2
 .sp
