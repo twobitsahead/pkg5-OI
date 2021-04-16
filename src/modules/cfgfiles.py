@@ -118,11 +118,44 @@ class CfgFile(object):
             self.needswriting = False
 
     def getvalue(self, template):
+        """ returns one (first) entry matched by the template which must contain
+            all the keys and expected values as defined for the current CfgFile
+            instance; for implementations in this source file, each use-case
+            has one key (usually "username") """
         val = self.index.get(tuple(template[k] for k in self.keys), None)
         if val:
             return val[1]
         else:
             return {}
+
+    def getvalues(self, template):
+        """ returns an array with zero or more hits to all key-values specified
+            in the template, and the requested keys do not have to be the ones
+            indexed in the self.keys; more than one hit is possible e.g. if a
+            password database contains several names for same UID and the query
+            is just for UID number """
+        vals = []
+        for valkey in self.index:
+            val = self.index.get(valkey)[1]
+            #print("[D] val: ", val)
+            hit = None
+            for k in template:
+                #print("[D]     key: %s\tseekval: %s" % (k, template[k]))
+                if k in val:
+                    #print("    val[k]: %s" % (val[k]))
+                    ### str() allows e.g. uid in template to be a numeric type
+                    if str(val[k]) == str(template[k]) and hit is not False:
+                        #print("[D]     HAVE A HIT!")
+                        hit = True
+                    else:
+                        #print("[D]     LOST A HIT (val[k] mismatched)")
+                        hit = False
+                else:
+                    #print("[D]     LOST A HIT (k not in val)")
+                    hit = False
+            if hit:
+                vals.append(val)
+        return vals
 
     def getdefaultvalues(self):
         """ returns dictionary of default string values - ignores
@@ -249,6 +282,16 @@ class PasswordFile(CfgFile):
         c.update(self.shadow_file.getvalue(template))
         return c
 
+    def getvalues(self, template):
+        """ merge dbs... do passwd file first to get right passwd value;
+            note this returns an array with zero or more items"""
+        a = self.password_file.getvalues(template).copy()
+        if a:
+            for c in a:
+                if "username" in c:
+                    c.update(self.shadow_file.getvalue({"username" : c["username"]}))
+        return a
+
     def updatevalue(self, template):
         copy = template.copy()
         if "password" in copy:
@@ -294,6 +337,9 @@ class PasswordFile(CfgFile):
 
     def getuser(self, username):
         return self.getvalue({"username" : username})
+
+    def getusersbyid(self, userid):
+        return self.getvalues({"uid" : userid})
 
     def getdefaultvalues(self):
         a = self.password_file.getdefaultvalues()
@@ -384,6 +430,12 @@ class GroupFile(CfgFile):
     def removeuser(self, username):
         for g in self.getgroups(username):
             self.subuser(g, username)
+
+    def getgroup(self, groupname):
+        return self.getvalue({"groupname" : groupname})
+
+    def getgroupsbyid(self, groupid):
+        return self.getvalues({"gid" : groupid})
 
 class FtpusersFile(CfgFile):
     """ If a username is present in this file, it denies that user
