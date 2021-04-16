@@ -69,6 +69,8 @@ class GroupAction(generic.Action):
                         return
 
                 template = self.extract(["groupname", "gid"])
+                if "PKG_ACCOUNTS_DEBUG" in os.environ:
+                        sys.stderr.write("[D] Processing group " + self.attrs["groupname"] + "\n")
 
                 root = pkgplan.image.get_root()
                 try:
@@ -82,6 +84,56 @@ class GroupAction(generic.Action):
 
                 # Read group attrs from on-disk data, if any
                 cur_attrs = gr.getvalue(template)
+
+                # Check if the gid number is occupied
+                if "gid" in self.attrs:
+                        # ...if the pkg action required a gid number
+                        cur_attrs_gid = gr.getgroupsbyid(self.attrs["gid"])
+                        if cur_attrs_gid:
+                                # ...if the GID definition(s) existed on-disk
+                                # note there may be several aliases to same GID
+                                if "PKG_ACCOUNTS_DEBUG" in os.environ:
+                                        sys.stderr.write("[D] Group(s) with GID " + self.attrs["gid"] + ": " + str(cur_attrs_gid) + "\n")
+                                may_proceed = False
+                                existing_names = []
+                                for cur_attrs_iter in cur_attrs_gid:
+                                        if cur_attrs_iter["groupname"] == self.attrs["groupname"]:
+                                                # At least one existing alias matches the group
+                                                # we would create at the GID we require
+                                                may_proceed = True
+                                                # Of all possible aliases on this GID, this name
+                                                # entry is the one we want to manage/update
+                                                cur_attrs = cur_attrs_iter
+                                        else:
+                                                existing_names.append(cur_attrs_iter["groupname"])
+
+                                if not may_proceed:
+                                        # ...on-disk group name(s) all differ from
+                                        # what we want to make now
+                                        # TODO: want a 3-way check vs. orig(?) whether
+                                        # the earlier package version we are upgrading
+                                        # from delivered that other name, then we can
+                                        # safely just rename it... or add an alias?..
+                                        # Currently we safely bail and ask a human to
+                                        # handle this "properly".
+                                        if pw:
+                                                pw.unlock()
+                                        txt = _("Group named '%s' cannot be installed. "
+                                            "Requested GID number '%s' is already "
+                                            "occupied by %s. "
+                                            "Please evacuate that group to another ID "
+                                            "first (including FS object ownership), or "
+                                            "rename (or alias) the account to the new "
+                                            "packaged name if applicable."
+                                            % (self.attrs["groupname"], str(self.attrs["gid"]), existing_names) )
+                                        if "PKG_ACCOUNTS_COLLISION" in os.environ and os.environ["PKG_ACCOUNTS_COLLISION"] == "permit":
+                                                sys.stderr.write("WARNING (relaxed because PKG_ACCOUNTS_COLLISION==permit): " + txt + "\n")
+                                        else:
+                                                raise apx.ActionExecutionError(self,
+                                                    details=txt,
+                                                    fmri=pkgplan.destination_fmri)
+                        if "PKG_ACCOUNTS_DEBUG" in os.environ:
+                                sys.stderr.write("[D] GID " + self.attrs["gid"] + " is available or occupied by expected groupname\n")
 
                 # check for (maybe wrong) pre-existing definition
                 # if so, rewrite entry using existing defs but new group entry
