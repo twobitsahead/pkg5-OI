@@ -80,16 +80,21 @@ class GroupAction(generic.Action):
 
                 gr = GroupFile(pkgplan.image)
 
+                # Read group attrs from on-disk data, if any
                 cur_attrs = gr.getvalue(template)
 
-                # check for (wrong) pre-existing definition
+                # check for (maybe wrong) pre-existing definition
                 # if so, rewrite entry using existing defs but new group entry
                 #        (XXX this doesn't chown any files on-disk)
                 # else, nothing to do
                 if cur_attrs:
+                        # ...if the definition existed on-disk
                         if "gid" not in self.attrs:
+                                # ...if the pkg action did not require a gid number
                                 self.attrs["gid"] = cur_attrs["gid"]
                         elif self.attrs["gid"] != cur_attrs["gid"]:
+                                # ...if the pkg action required a gid number and
+                                # it differs from on-disk for same group name
                                 cur_gid = cur_attrs["gid"]
                                 template = cur_attrs;
                                 template["gid"] = self.attrs["gid"]
