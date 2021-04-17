@@ -137,21 +137,27 @@ class CfgFile(object):
         vals = []
         for valkey in self.index:
             val = self.index.get(valkey)[1]
-            #print("[D] val: ", val)
+            if "PKG_ACCOUNTS_DEBUG" in os.environ and os.environ["PKG_ACCOUNTS_DEBUG"] == "verbose":
+                print("[D] val: ", val)
             hit = None
             for k in template:
-                #print("[D]     key: %s\tseekval: %s" % (k, template[k]))
+                if "PKG_ACCOUNTS_DEBUG" in os.environ and os.environ["PKG_ACCOUNTS_DEBUG"] == "verbose":
+                    print("[D]     key: %s\tseekval: %s" % (k, template[k]))
                 if k in val:
-                    #print("    val[k]: %s" % (val[k]))
+                    if "PKG_ACCOUNTS_DEBUG" in os.environ and os.environ["PKG_ACCOUNTS_DEBUG"] == "verbose":
+                        print("    val[k]: %s" % (val[k]))
                     ### str() allows e.g. uid in template to be a numeric type
                     if str(val[k]) == str(template[k]) and hit is not False:
-                        #print("[D]     HAVE A HIT!")
+                        if "PKG_ACCOUNTS_DEBUG" in os.environ and os.environ["PKG_ACCOUNTS_DEBUG"] == "verbose":
+                            print("[D]     HAVE A HIT!")
                         hit = True
                     else:
-                        #print("[D]     LOST A HIT (val[k] mismatched)")
+                        if "PKG_ACCOUNTS_DEBUG" in os.environ and os.environ["PKG_ACCOUNTS_DEBUG"] == "verbose":
+                            print("[D]     LOST A HIT (val[k] mismatched)")
                         hit = False
                 else:
-                    #print("[D]     LOST A HIT (k not in val)")
+                    if "PKG_ACCOUNTS_DEBUG" in os.environ and os.environ["PKG_ACCOUNTS_DEBUG"] == "verbose":
+                        print("[D]     LOST A HIT (k not in val)")
                     hit = False
             if hit:
                 vals.append(val)
