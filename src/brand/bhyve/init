@@ -15,13 +15,18 @@
 
 # Copyright 2020 OmniOS Community Edition (OmniOSce) Association.
 
-import logging, os, subprocess, sys, time, re, getopt
+import logging, os, subprocess, sys, time, re, getopt, shutil
 import xml.etree.ElementTree as etree
 from pprint import pprint, pformat
+import socket
+import struct
+
+import yaml
 
 zonexml = '/etc/zone.xml'
 uuidfile = '/etc/uuid'
 testmode = False
+cloud_init_iso_path = '/tmp/cloud-init.iso'
 
 try:
     opts, args = getopt.getopt(sys.argv[1:], "tx:u:")
@@ -40,53 +45,68 @@ if testmode:
     logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
 else:
     logging.basicConfig(filename='/tmp/init.log', filemode='a',
-        level=logging.DEBUG)
+                        level=logging.DEBUG)
 
 # Default values
 opts = {
-    'acpi':         'on',
-    'vcpus':        '1',
-    'ram':          '1G',
-    'bootrom':      'BHYVE_RELEASE',
-    'bootorder':    'cd',
-    'hostbridge':   'i440fx',
-    'diskif':       'virtio-blk',
-    'netif':        'virtio-net-viona',
-    'type':         'generic',
-    'vnc':          'off',
-    'xhci':         '',
-    'console':      '/dev/zconsole',
-    'extra':        '',
+    'acpi': 'on',
+    'vcpus': '1',
+    'ram': '1G',
+    'bootrom': 'BHYVE_RELEASE',
+    'bootorder': 'cd',
+    'hostbridge': 'i440fx',
+    'diskif': 'virtio-blk',
+    'netif': 'virtio-net-viona',
+    'type': 'generic',
+    'vnc': 'off',
+    'xhci': '',
+    'console': '/dev/zconsole',
+    'extra': '',
+    'cloud-init': '',
+    'datasource': '',
+    'socket': '',
 }
 
 aliases = {
     'diskif': {
-        'virtio':       'virtio-blk',
-        'ahci':         'ahci-hd',
+        'virtio': 'virtio-blk',
+        'ahci': 'ahci-hd',
     },
     'netif': {
-        'virtio':       'virtio-net-viona',
+        'virtio': 'virtio-net-viona',
     },
     'hostbridge': {
         # Was wrongly used in some older scripts.
-        'intel':        'netapp',
+        'intel': 'netapp',
     },
     'vnc': {
-        'on':   'unix=/tmp/vm.vnc',
+        'on': 'unix=/tmp/vm.vnc',
         'wait': 'wait,unix=/tmp/vm.vnc',
     },
+    'cloud-init': {
+        'on': 'ds=nocloud;i={uuid}',
+        'http': 'ds=nocloud-net;s=http://{path};i={uuid}',
+        'https': 'ds=nocloud-net;s=https://{path};i={uuid}',
+    },
+    'socket': {
+        'on': ',virtio-console,port1=/tmp/console1.sock',
+        'on1': ',virtio-console,port1=/tmp/console1.sock,port2=/tmp/console2.sock',
+        'on2': ',virtio-console,port1=/tmp/console1.sock,port2=/tmp/console2.sock,port3=/tmp/console3.sock',
+    }
 }
 
 HOSTBRIDGE_SLOT = 0
-LPC_SLOT        = 1
-CDROM_SLOT      = 3
-BOOTDISK_SLOT   = 4
-DISK_SLOT       = 5
-NET_SLOT        = 6
-CDROM_SLOT2     = 7
-DISK_SLOT2      = 8
-VNC_SLOT        = 30
-LPC_SLOT_WIN    = 31
+LPC_SLOT = 1
+CDROM_SLOT = 3
+BOOTDISK_SLOT = 4
+DISK_SLOT = 5
+NET_SLOT = 6
+CDROM_SLOT2 = 7
+DISK_SLOT2 = 8
+CLOUD_INIT_SLOT = 28
+VIRTIO_CONSOLE_SLOT = 29
+VNC_SLOT = 30
+LPC_SLOT_WIN = 31
 
 try:
     with open(uuidfile) as file:
@@ -103,7 +123,15 @@ except:
 root = cfg.getroot()
 logging.info('Parsed {0}'.format(zonexml))
 
+
 ##############################################################################
+
+
+def cidr_to_netmask(cidr):
+    network, net_bits = cidr.split('/')
+    host_bits = 32 - int(net_bits)
+    netmask = socket.inet_ntoa(struct.pack('!I', (1 << 32) - (1 << host_bits)))
+    return network, netmask
 
 def opt(tag):
     global opts, root
@@ -111,7 +139,7 @@ def opt(tag):
         el = root.find('./attr[@name="{0}"]'.format(tag))
         opts[tag] = el.get('value').strip()
         logging.debug('Found custom {0} attribute - "{1}"'
-            .format(tag, opts[tag]))
+                      .format(tag, opts[tag]))
         if tag in aliases:
             try:
                 opts[tag] = aliases[tag][opts[tag]]
@@ -121,10 +149,91 @@ def opt(tag):
     except:
         pass
 
+
 def diskpath(arg):
     if arg.startswith('/'):
         return arg
     return '/dev/zvol/rdsk/{0}'.format(arg)
+
+
+def create_cloud_init_disk():
+    global opts, root, uuid
+    try:
+        cloud_init_dir = '/tmp/cloud-init.dir'
+        os.mkdir(cloud_init_dir)
+
+        meta_data = {
+            'instance-id': uuid,
+            'hostname': root.find('./zone').attrib['name']
+        }
+
+        with os.open(cloud_init_dir + '/meta-data', os.O_CREAT) as meta_file:
+            os.write(meta_file, yaml.dump(meta_data))
+
+        if len(list(root.findall('./attr[@name="cloud-config"]'))):
+            try:
+                config_el = root.find('./attr[@name="cloud-config"]')
+                cloud_config_file = config_el.get('value').strip()
+
+                shutil.copyfile(cloud_config_file, cloud_init_dir + '/user-data')
+            except:
+                pass
+        elif len(list(root.findall('./attr[@name="password"]'))):
+            try:
+                pw_el = root.find('./attr[@name="password"]')
+                pw = pw_el.get('value').strip()
+
+                pw_yaml = {
+                    'password': pw,
+                    'chpasswd': {
+                        'expire': False
+                    },
+                    'ssh-pwauth': True
+                }
+                with os.open(cloud_init_dir + '/user-data', os.O_CREAT) as user_data:
+                    os.write(user_data, b'#cloud-config\n')
+                    os.write(user_data, yaml.dump(pw_yaml))
+            except:
+                pass
+
+        network_config = {
+            'version': 1,
+            'config': [],
+        }
+
+        for net_el in root.findall('./network[@physical]'):
+            phys_name = net_el.get('physical').strip()
+            mac_addr = subprocess.check_output(["/usr/sbin/dladm", "show-vnic", phys_name, "-o", "macaddress", "-p"])
+            netconf = {
+                'type': "physical",
+                'name': phys_name,
+                'mac_address': mac_addr,
+                'subnets': [],
+            }
+
+            if 'allowed-address' in net_el.keys():
+                addr_cidr = net_el.get('allowed-address').strip()
+                gw = net_el.get('defrouter').strip()
+                addr, netmask = cidr_to_netmask(addr_cidr)
+
+                addr_conf = {
+                    'type': "static",
+                    'address': addr,
+                    'netmask': netmask,
+                    'gateway': gw
+                }
+                netconf['subnets'].extend(addr_conf)
+
+            network_config['config'].extend(netconf)
+
+        with os.open(cloud_init_dir+'/network-config', os.O_CREAT) as net_config_file:
+            os.write(net_config_file, yaml.dump(network_config))
+
+        isocmd = ['/usr/bin/mkisofs', '-V', 'cidata', '-J', '-R', cloud_init_iso_path, cloud_init_dir]
+        subprocess.run(isocmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    except:
+        pass
+
 
 # Look for attributes of the form <type> or <type>N and generate a list.
 def build_devlist(type, maxval):
@@ -156,6 +265,7 @@ def build_devlist(type, maxval):
 
     return devlist
 
+
 ##############################################################################
 
 for tag in opts.keys():
@@ -167,7 +277,7 @@ if opts['type'] == 'windows':
     # ... - AHCI devices must be in slots 3/4/5/6
     # ... - The PCI-ISA bus aka lpc must be in slot 31
     logging.info('Adjusting LPC PCI slot for windows')
-    LPC_SLOT        = LPC_SLOT_WIN
+    LPC_SLOT = LPC_SLOT_WIN
 
 # At present, moving the CDROM to after the hard disks is the only way we
 # have of changing the boot order. This will hopefully improve in the
@@ -187,13 +297,31 @@ if uuid:
 if opts['acpi'] == 'on':
     args.append('-A')
 
+# Cloud Init Datasource
+if len(opts['cloud-init']):
+    if 'datasource' in opts:
+        serial = opts['cloud-init'].format(uuid=uuid, path=opts['datasource'])
+    else:
+        serial = opts['cloud-init'].format(uuid=uuid)
+else:
+    serial = uuid
+
 args.extend([
     '-H',
     '-B', '1,manufacturer={},product={},version={},serial={},sku={},family={}'
-        .format('OpenIndiana', 'OpenIndiana HVM', '1.0', uuid, '001', 'Virtual Machine'),
+        .format('OpenIndiana', 'OpenIndiana HVM', '1.0', serial, '001', 'Virtual Machine'),
     '-c', opts['vcpus'],
     '-m', opts['ram'],
 ])
+
+
+# Cloud Init Disk
+if len(opts['cloud-init']):
+    create_cloud_init_disk()
+
+    args.extend([
+        '-s', '{0}:{1},{2},{3}'.format(CLOUD_INIT_SLOT, 0, 'ahci-cd', cloud_init_iso_path)
+    ])
 
 # Bootrom
 
@@ -237,7 +365,7 @@ try:
     bootdisk = root.find('./attr[@name="bootdisk"]')
     args.extend([
         '-s', '{0}:0,{1},{2}'.format(BOOTDISK_SLOT, opts['diskif'],
-            diskpath(bootdisk.get('value').strip()))
+                                     diskpath(bootdisk.get('value').strip()))
     ])
 except:
     pass
@@ -247,12 +375,12 @@ for i, v in build_devlist('disk', 20).items():
     if i < 10:
         args.extend([
             '-s', '{0}:{1},{2},{3}'.format(DISK_SLOT, i, opts['diskif'],
-            diskpath(v))
+                                           diskpath(v))
         ])
     else:
         args.extend([
             '-s', '{0}:{1},{2},{3}'.format(DISK_SLOT2, i - 10, opts['diskif'],
-            diskpath(v))
+                                           diskpath(v))
         ])
 
 # Network
@@ -271,7 +399,7 @@ for f in root.findall('./network[@physical]'):
 
     args.extend([
         '-s', '{0}:{1},{2},{3}{4}'
-        .format(NET_SLOT, i, netif, ifname, net_extra)
+            .format(NET_SLOT, i, netif, ifname, net_extra)
     ])
     i += 1
 
