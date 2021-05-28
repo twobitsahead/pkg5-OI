@@ -137,10 +137,62 @@ class UserAction(generic.Action):
                         return
 
                 username = self.attrs["username"]
+                if "PKG_ACCOUNTS_DEBUG" in os.environ:
+                        sys.stderr.write("[D] Processing user " + username + "\n")
 
                 try:
                         pw, gr, ftp, cur_attrs = \
                             self.readstate(pkgplan.image, username, lock=True)
+
+                        # Check if the UID is already occupied
+                        if "uid" in self.attrs:
+                                cur_attrs_uid = pw.getusersbyid(self.attrs["uid"])
+                                if cur_attrs_uid:
+                                        # ...if the UID definition(s) existed on-disk
+                                        # note there may be several aliases to same UID
+                                        if "PKG_ACCOUNTS_DEBUG" in os.environ:
+                                                sys.stderr.write("[D] User(s) with UID " + self.attrs["uid"] + ": " + str(cur_attrs_uid) + "\n")
+                                        may_proceed = False
+                                        existing_names = []
+                                        for cur_attrs_iter in cur_attrs_uid:
+                                                if cur_attrs_iter["username"] == self.attrs["username"]:
+                                                        # At least one existing alias matches the user
+                                                        # we would create at the UID we require
+                                                        may_proceed = True
+                                                        # Note: unlike group.py we do not reset cur_attrs
+                                                        # entry here as the one we want to manage/update:
+                                                        # readstate() did a diligent job of finding it by
+                                                        # name and adding correlated data from elsewhere.
+                                                else:
+                                                        existing_names.append(cur_attrs_iter["username"])
+
+                                        if not may_proceed:
+                                                # ...on-disk user name(s) all differ from
+                                                # what we want to make now
+                                                # TODO: want a 3-way check vs. orig(?) whether
+                                                # the earlier package version we are upgrading
+                                                # from delivered that other name, then we can
+                                                # safely just rename it... or add an alias?..
+                                                # Currently we safely bail and ask a human to
+                                                # handle this "properly".
+                                                if pw:
+                                                        pw.unlock()
+                                                txt = _("User named '%s' cannot be installed. "
+                                                    "Requested UID number '%s' is already "
+                                                    "occupied by %s. "
+                                                    "Please evacuate that user to another ID "
+                                                    "first (including FS object ownership), or "
+                                                    "rename (or alias) the account to the new "
+                                                    "packaged name if applicable."
+                                                    % (self.attrs["username"], str(self.attrs["uid"]), existing_names) )
+                                                if "PKG_ACCOUNTS_COLLISION" in os.environ and os.environ["PKG_ACCOUNTS_COLLISION"] == "permit":
+                                                        sys.stderr.write("WARNING (relaxed because PKG_ACCOUNTS_COLLISION==permit): " + txt + "\n")
+                                                else:
+                                                        raise apx.ActionExecutionError(self,
+                                                            details=txt,
+                                                            fmri=pkgplan.destination_fmri)
+                                if "PKG_ACCOUNTS_DEBUG" in os.environ:
+                                        sys.stderr.write("[D] UID " + self.attrs["uid"] + " is available or occupied by expected username\n")
 
                         self.attrs["gid"] = str(pkgplan.image.get_group_by_name(
                             self.attrs["group"]))
