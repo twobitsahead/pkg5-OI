@@ -195,7 +195,7 @@ if [[ -n $entire_fmri ]]; then
 		$PKG publisher -HPn -F tsv | cut -f1 | read publisher
 	fi
 	printf "$m_incorp\n"
-	LC_ALL=C $PKG list $list_origin -af pkg://$publisher/$entire_fmri \
+	LC_ALL=C.UTF-8 $PKG list $list_origin -af pkg://$publisher/$entire_fmri \
 		> /dev/null 2>&1
 	if [[ $? -ne 0 ]]; then
 		fail_fatal "$f_no_entire_in_pref" $entire_fmri $publisher
@@ -228,12 +228,12 @@ printf "$m_image\n" $ZONEROOT
 # If we have a publisher specified by -P, pass it to image-create and use no
 # other publishers. Otherwise, use all of the publishers from the GZ.
 if [[ -n $pub_and_origins ]]; then
-	LC_ALL=C $PKG image-create --zone --full -p $pub_and_origins \
+	LC_ALL=C.UTF-8 $PKG image-create --zone --full -p $pub_and_origins \
 	    $ZONEROOT || fail_incomplete "$f_img"
 else
-	LC_ALL=C $PKG image-create --zone --full $ZONEROOT \
+	LC_ALL=C.UTF-8 $PKG image-create --zone --full $ZONEROOT \
 	    || fail_incomplete "$f_img"
-	LC_ALL=C $PKG -R $ZONEROOT copy-publishers-from $GZ_IMAGE \
+	LC_ALL=C.UTF-8 $PKG -R $ZONEROOT copy-publishers-from $GZ_IMAGE \
 	    || fail_incomplete "$f_img"
 fi
 
@@ -243,7 +243,7 @@ fi
 PKG_IMAGE="$ZONEROOT"
 export PKG_IMAGE
 
-LC_ALL=C $PKG publisher -Hn -F tsv | cut -f1,7 | while read pub url; do
+LC_ALL=C.UTF-8 $PKG publisher -Hn -F tsv | cut -f1,7 | while read pub url; do
 	printf "$m_publisher\n" $pub $url
 done
 
@@ -335,7 +335,7 @@ pkglist="$pkglist $extra_packages"
 # Do the install; we just refreshed after image-create, so skip that.  We
 # also skip indexing here, as that is also what the LiveCD does.
 #
-LC_ALL=C $PKG install --accept --no-index --no-refresh $pkglist || \
+LC_ALL=C.UTF-8 $PKG install --accept --no-index --no-refresh $pkglist || \
     pkg_err_check "$f_pkg"
 
 printf "$m_smf"

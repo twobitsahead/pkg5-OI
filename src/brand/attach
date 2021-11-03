@@ -149,7 +149,7 @@ gather_incorporations() {
 	typeset p=
 
 	for p in \
-	    $(LC_ALL=C $PKG search -Hl -o pkg.name \
+	    $(LC_ALL=C.UTF-8 $PKG search -Hl -o pkg.name \
 	    ':pkg.depend.install-hold:core-os*');do
 		incorporations="$incorporations $(get_pkg_fmri $p)"
 	done
@@ -329,7 +329,7 @@ install_image "$inst_type" "$install_media"
 # Perform a sanity check to confirm that the image is not a global zone.
 #
 VARIANT=variant.opensolaris.zone
-variant=$(LC_ALL=C $PKG -R $ZONEROOT variant -H $VARIANT)
+variant=$(LC_ALL=C.UTF-8 $PKG -R $ZONEROOT variant -H $VARIANT)
 [[ $? -ne 0 ]] && fatal "$f_sanity_variant" $VARIANT
 
 echo $variant | IFS=" " read variantname variantval
@@ -391,7 +391,7 @@ fi
 
 log "$m_updating"
 
-LC_ALL=C $PKG copy-publishers-from $GZ_IMAGE
+LC_ALL=C.UTF-8 $PKG copy-publishers-from $GZ_IMAGE
 
 #
 # Bring the ngz entire incorporation into sync with the gz as follows:
@@ -405,7 +405,7 @@ LC_ALL=C $PKG copy-publishers-from $GZ_IMAGE
 #
 if [[ -z $gz_entire_fmri && -n $ngz_entire_fmri ]]; then
 	if [[ $allow_update == 1 ]]; then
-		LC_ALL=C $PKG uninstall entire || pkg_err_check "$f_update"
+		LC_ALL=C.UTF-8 $PKG uninstall entire || pkg_err_check "$f_update"
 	else
 		log "\n$m_need_update" "$ZONENAME"
 		EXIT_CODE=$ZONE_SUBPROC_NOTCOMPLETE
@@ -414,7 +414,7 @@ if [[ -z $gz_entire_fmri && -n $ngz_entire_fmri ]]; then
 fi
 
 if [[ $allow_update == 0 ]]; then
-	LC_ALL=C $PKG install --accept --no-refresh -n $incorp_list
+	LC_ALL=C.UTF-8 $PKG install --accept --no-refresh -n $incorp_list
 	if [[ $? == 4 ]]; then
 		log "\n$m_complete"
 		EXIT_CODE=$ZONE_SUBPROC_OK
@@ -433,11 +433,11 @@ fi
 # same version as we have in the GZ.
 #
 if [[ -n $gz_entire_fmri && -z $ngz_entire_fmri ]]; then
-	LC_ALL=C $PKG install --accept --no-refresh entire  || \
+	LC_ALL=C.UTF-8 $PKG install --accept --no-refresh entire  || \
 	    pkg_err_check "$f_update"
 fi
 
-LC_ALL=C $PKG install --accept --no-refresh $incorp_list  || \
+LC_ALL=C.UTF-8 $PKG install --accept --no-refresh $incorp_list  || \
     pkg_err_check "$f_update"
 
 log "\n$m_sync_done"
