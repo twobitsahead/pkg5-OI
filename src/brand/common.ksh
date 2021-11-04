@@ -343,7 +343,7 @@ get_pkg_fmri() {
 	typeset pkg_fmri=
 	typeset info_out=
 
-	info_out=$(LC_ALL=C $PKG info pkg:/$pname 2>/dev/null)
+	info_out=$(LC_ALL=C.UTF-8 $PKG info pkg:/$pname 2>/dev/null)
 	if [[ $? -ne 0 ]]; then
 		return 1
 	fi
@@ -371,7 +371,7 @@ get_publisher_attrs() {
 	typeset pname=$1
 	typeset utype=$2
 
-	LC_ALL=C $PKG publisher -HF tsv| \
+	LC_ALL=C.UTF-8 $PKG publisher -HF tsv| \
 	    nawk '($5 == "'"$utype"'" || \
 	    ("'"$utype"'" == "origin" && $5 == "")) \
 	    && $1 == "'"$pname"'" \
@@ -438,7 +438,7 @@ get_publisher_urls() {
 		ptype_filter="false"
 	fi
 
-	LC_ALL=C $PKG publisher -HF tsv | \
+	LC_ALL=C.UTF-8 $PKG publisher -HF tsv | \
 		nawk '($5 == "'"$utype"'" || \
 		("'"$utype"'" == "origin" && $5 == "")) && \
 		( "'"$ptype_filter"'" == "" || $3 == "'"$ptype_filter"'" ) \
@@ -478,9 +478,9 @@ get_pub_secinfo() {
 	typeset key=
 	typeset cert=
 
-	key=$(LC_ALL=C $PKG publisher $1 |
+	key=$(LC_ALL=C.UTF-8 $PKG publisher $1 |
 	    nawk -F': ' '/SSL Key/ {print $2; exit 0}')
-	cert=$(LC_ALL=C $PKG publisher $1 |
+	cert=$(LC_ALL=C.UTF-8 $PKG publisher $1 |
 	    nawk -F': ' '/SSL Cert/ {print $2; exit 0}')
 	print $key $cert
 }

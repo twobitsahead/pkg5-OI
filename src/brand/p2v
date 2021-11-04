@@ -70,7 +70,7 @@ fix_net()
 		return
 	fi
 
-	NET=$(LC_ALL=C zonecfg -z $ZONENAME info net)
+	NET=$(LC_ALL=C.UTF-8 zonecfg -z $ZONENAME info net)
 	if (( $? != 0 )); then
 		error "$e_badinfo" "net"
 		return
@@ -268,7 +268,7 @@ rm_pkgs()
 		fi
 
 		vlog "$v_rmpkg" "$i"
-		zlogin -S $ZONENAME LC_ALL=C \
+		zlogin -S $ZONENAME LC_ALL=C.UTF-8 \
 		    /usr/bin/pkg -R /a uninstall -r $i </dev/null >&2 || \
 		    error "$e_rmpkg" $i
 	done
