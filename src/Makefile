@@ -50,7 +50,7 @@ PYLINT_VER_CMD = PYTHONPATH= /usr/bin/pkg info pkg:/developer/python/pylint | \
 PEP8 = /usr/bin/pep8
 JOBS = 8
 
-SUBDIRS=brand zoneproxy tsol util/mkcert
+SUBDIRS=brand zoneproxy util/mkcert
 
 all: $(SUBDIRS)
 	$(PYTHON35) setup.py build
