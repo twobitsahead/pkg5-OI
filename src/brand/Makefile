@@ -30,7 +30,8 @@ INSTALL = /usr/sbin/install
 ROOT = ../../proto/root_${MACH}
 ROOTETC = $(ROOT)/etc
 ROOTETCZONES = $(ROOT)/etc/zones
-ROOTETCBRAND = $(ROOT)/etc/brand/ipkg
+ROOTETCBRAND = $(ROOT)/etc/brand/
+ROOTETCBRANDIPKG = $(ROOT)/etc/brand/ipkg
 ROOTUSRLIB = $(ROOT)/usr/lib
 ROOTBRAND = $(ROOTUSRLIB)/brand
 ROOTBRANDPKG = $(ROOTBRAND)/ipkg
@@ -44,6 +45,7 @@ ROOTDIRS = \
 	$(ROOT) \
 	$(ROOTETC) \
 	$(ROOTETCBRAND) \
+	$(ROOTETCBRANDIPKG) \
 	$(ROOTETCZONES) \
 	$(ROOTUSRLIB) \
 	$(ROOTBRAND) \
@@ -53,8 +55,9 @@ ROOTDIRS = \
 	$(BHYVEBRANDPKG)
 
 ROOTFILES = \
-	$(ROOTETCBRAND)/pkgrm.conf \
-	$(ROOTETCBRAND)/smf_disable.conf \
+	$(ROOTETCBRANDIPKG)/pkgrm.conf \
+	$(ROOTETCBRANDIPKG)/smf_disable.conf \
+	$(ROOTETCBRAND)/nlipkg \
 	$(ROOTETCZONES)/OInlipkg.xml \
 	$(ROOTETCZONES)/SUNWipkg.xml \
 	$(ROOTBRANDPKG)/attach \
@@ -73,6 +76,7 @@ ROOTFILES = \
 	$(ROOTBRANDPKG)/system-unconfigure \
 	$(ROOTBRANDPKG)/uninstall \
 	$(ROOTBRANDNLIPKG)/config.xml \
+	$(ROOTBRANDNLIPKG)/platform.xml \
 	$(KVMBRANDPKG)/config.xml \
 	$(KVMBRANDPKG)/platform.xml \
 	$(KVMBRANDPKG)/init \
@@ -119,16 +123,22 @@ clobber: clean
 install: $(ROOTFILES)
 
 
-$(ROOT) $(ROOTETC) $(ROOTETCBRAND) $(ROOTETCZONES) $(ROOTUSRLIB) \
-	$(ROOTBRAND) $(ROOTBRANDPKG) $(ROOTBRANDNLIPKG) $(KVMBRANDPKG) $(BHYVEBRANDPKG):
+$(ROOT) $(ROOTETC) $(ROOTETCBRAND) $(ROOTETCBRANDIPKG) $(ROOTETCZONES) \
+    $(ROOTUSRLIB) $(ROOTBRAND) $(ROOTBRANDPKG) $(ROOTBRANDNLIPKG) \
+    $(KVMBRANDPKG) $(BHYVEBRANDPKG):
 	mkdir -p $@
 
 $(ROOTBRANDNLIPKG)/config.xml: $(ROOTBRANDNLIPKG) config.xml
 	rm -f $@; $(INSTALL) -f $(ROOTBRANDNLIPKG) -m 0444 config.xml
 
+$(ROOTBRANDNLIPKG)/platform.xml: $(ROOTBRANDNLIPKG)
+	rm -f $@; ln -sf ../ipkg/platform.xml $(ROOTBRANDNLIPKG)/platform.xml 
 
-$(ROOTETCBRAND)/%: $(ROOTETCBRAND) %
-	rm -f $@; $(INSTALL) -f $(ROOTETCBRAND) -m 0644 $<
+$(ROOTETCBRAND)/nlipkg: $(ROOTETCBRAND)
+	rm -f $@; ln -sf ./ipkg $(ROOTETCBRAND)/nlipkg
+
+$(ROOTETCBRANDIPKG)/%: $(ROOTETCBRANDIPKG) %
+	rm -f $@; $(INSTALL) -f $(ROOTETCBRANDIPKG) -m 0644 $<
 
 $(ROOTETCZONES)/%: $(ROOTETCZONES) %
 	rm -f $@; $(INSTALL) -f $(ROOTETCZONES) -m 0444 $<
@@ -147,3 +157,4 @@ $(BHYVEBRANDPKG)/createzone: $(BHYVEBRANDPKG)
 
 $(BHYVEBRANDPKG)/socat: $(BHYVEBRANDPKG)
 	rm -f $@; $(INSTALL) -f $(BHYVEBRANDPKG) -m 0444 kvm/socat
+
