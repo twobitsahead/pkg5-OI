@@ -123,7 +123,6 @@ file path=$(PYDIRVP)/pkg/client/progress.py pkg.depend.bypass-generate=.*six.*
 file path=$(PYDIRVP)/pkg/client/publisher.py pkg.depend.bypass-generate=.*
 file path=$(PYDIRVP)/pkg/client/query_parser.py \
     pkg.depend.bypass-generate=.*six.*
-file path=$(PYDIRVP)/pkg/client/rad_pkg.py pkg.depend.bypass-generate=.*six.*
 file path=$(PYDIRVP)/pkg/client/sigpolicy.py pkg.depend.bypass-generate=.*six.*
 dir  path=$(PYDIRVP)/pkg/client/transport
 file path=$(PYDIRVP)/pkg/client/transport/__init__.py
