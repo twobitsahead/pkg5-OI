@@ -120,7 +120,7 @@ PKGMOG_DEFINES    = $(PKGMOG_DEFVALS:%=-D %)
 PKGMOG_DEFINES    += $(ARCH_DEFINES:%=-D %)
 
 all: $(MOGRIFESTS)
-install: lint
+install: repository-metadata $(PDIR) lint
 
 clean:
 	rm -rf $(PDIR)
