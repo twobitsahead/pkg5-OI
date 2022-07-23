@@ -36,6 +36,8 @@
     pkg:/library/python/pycurl-39
     pkg:/library/python/pyopenssl-35
     pkg:/library/python/pyopenssl-39
+    pkg:/library/python/pyyaml-35
+    pkg:/library/python/pyyaml-39
     pkg:/library/python/rapidjson-35
     pkg:/library/python/rapidjson-39
     pkg:/library/python/six-35
