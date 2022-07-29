@@ -17,7 +17,7 @@ CPPFLAGS = -D_REENTRANT -D_POSIX_PTHREAD_SEMANTICS
 
 # The version of python used by the scripts, and the 'primary' version in
 # packaging, which is transformed into the others
-PYTHON_VERSION = 3.5
+PYTHON_VERSION = 3.9
 
 # The full set of versions for which modules are delivered
 PYTHON_VERSIONS = 3.5 3.9

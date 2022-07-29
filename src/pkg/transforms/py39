@@ -20,7 +20,8 @@
   %(pkg.depend.bypass-generate;notfound='notfound';prefix='pkg.depend.bypass-generate=')>
 
 <transform path=TBD -> delete pkg.depend.bypass-generate notfound>
-<transform path=TBD -> edit path 35m? 39>
-<transform path=TBD -> edit path 3.5 3.9>
+<transform path=TBD -> edit path -39\.so -35m\.so>
+<transform path=TBD -> edit path -39\.pyc -35\.pyc>
+<transform path=TBD -> edit path 3.9 3.5>
+<transform path=TBD -> edit path py3.9 py3.5>
 <transform path=TBD -> edit path TBD ''>
-

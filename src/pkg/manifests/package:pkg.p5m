@@ -39,20 +39,20 @@ set name=variant.arch value=$(ARCH)
 dir  path=$(PYDIR)
 dir  path=$(PYDIRVP)
 dir  path=$(PYDIRVP)/pkg
-file path=$(PYDIRVP)/pkg-0.1-py3.5.egg-info
+file path=$(PYDIRVP)/pkg-0.1-py3.9.egg-info
 file path=$(PYDIRVP)/pkg/__init__.py
-file path=$(PYDIRVP)/pkg/_arch.cpython-35m.so
-file path=$(PYDIRVP)/pkg/_pspawn.cpython-35m.so
-file path=$(PYDIRVP)/pkg/_sha512_t.cpython-35m.so
-file path=$(PYDIRVP)/pkg/_sysattr.cpython-35m.so
-file path=$(PYDIRVP)/pkg/_syscallat.cpython-35m.so
-file path=$(PYDIRVP)/pkg/_varcet.cpython-35m.so
+file path=$(PYDIRVP)/pkg/_arch.cpython-39.so
+file path=$(PYDIRVP)/pkg/_pspawn.cpython-39.so
+file path=$(PYDIRVP)/pkg/_sha512_t.cpython-39.so
+file path=$(PYDIRVP)/pkg/_sysattr.cpython-39.so
+file path=$(PYDIRVP)/pkg/_syscallat.cpython-39.so
+file path=$(PYDIRVP)/pkg/_varcet.cpython-39.so
 dir  path=$(PYDIRVP)/pkg/actions
 # pkgdepend doesn't understand the relative import syntax "from .x import y",
 # so we have to bypass generating dependencies on those files.
 file path=$(PYDIRVP)/pkg/actions/__init__.py pkg.depend.bypass-generate=.*
-file path=$(PYDIRVP)/pkg/actions/_actions.cpython-35m.so
-file path=$(PYDIRVP)/pkg/actions/_common.cpython-35m.so
+file path=$(PYDIRVP)/pkg/actions/_actions.cpython-39.so
+file path=$(PYDIRVP)/pkg/actions/_common.cpython-39.so
 file path=$(PYDIRVP)/pkg/actions/attribute.py pkg.depend.bypass-generate=.*
 file path=$(PYDIRVP)/pkg/actions/depend.py pkg.depend.bypass-generate=.*
 file path=$(PYDIRVP)/pkg/actions/directory.py pkg.depend.bypass-generate=.*
@@ -129,7 +129,7 @@ file path=$(PYDIRVP)/pkg/cpiofile.py
 file path=$(PYDIRVP)/pkg/dependency.py
 file path=$(PYDIRVP)/pkg/depotcontroller.py
 file path=$(PYDIRVP)/pkg/digest.py
-file path=$(PYDIRVP)/pkg/elf.cpython-35m.so
+file path=$(PYDIRVP)/pkg/elf.cpython-39.so
 file path=$(PYDIRVP)/pkg/facet.py
 dir  path=$(PYDIRVP)/pkg/file_layout
 file path=$(PYDIRVP)/pkg/file_layout/__init__.py
@@ -203,7 +203,7 @@ file path=$(PYDIRVP)/pkg/server/repository.py
 file path=$(PYDIRVP)/pkg/server/transaction.py
 file path=$(PYDIRVP)/pkg/sha512_t.py
 file path=$(PYDIRVP)/pkg/smf.py
-file path=$(PYDIRVP)/pkg/solver.cpython-35m.so
+file path=$(PYDIRVP)/pkg/solver.cpython-39.so
 file path=$(PYDIRVP)/pkg/sysattr.py
 file path=$(PYDIRVP)/pkg/syscallat.py
 file path=$(PYDIRVP)/pkg/sysvpkg.py
