@@ -20,7 +20,7 @@ CPPFLAGS = -D_REENTRANT -D_POSIX_PTHREAD_SEMANTICS
 PYTHON_VERSION = 3.9
 
 # The full set of versions for which modules are delivered
-PYTHON_VERSIONS = 3.5 3.9
+PYTHON_VERSIONS = 3.9
 
 PEP8 = /usr/bin/pep8-$(PYTHON_VERSION)
 PYTHON = /usr/bin/python$(PYTHON_VERSION)
