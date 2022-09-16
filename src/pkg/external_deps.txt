@@ -7,45 +7,27 @@
     pkg:/developer/python/pylint
     pkg:/developer/versioning/mercurial
     pkg:/library/python/cffi
-    pkg:/library/python/cffi-35
     pkg:/library/python/cffi-39
-    pkg:/library/python/cherrypy-35
     pkg:/library/python/cherrypy-39
-    pkg:/library/python/coverage-35
     pkg:/library/python/coverage-39
-    pkg:/library/python/cryptography-35
     pkg:/library/python/cryptography-39
-    pkg:/library/python/jsonrpclib-35
     pkg:/library/python/jsonrpclib-39
-    pkg:/library/python/jsonschema-35
     pkg:/library/python/jsonschema-39
-    pkg:/library/python/mako-35
     pkg:/library/python/mako-39
-    pkg:/library/python/pycodestyle-35
     pkg:/library/python/pycodestyle-39
-    pkg:/library/python/ply-35
     pkg:/library/python/ply-39
-    pkg:/library/python/portend-35
     pkg:/library/python/portend-39
     pkg:/library/python/prettytable
-    pkg:/library/python/prettytable-35
     pkg:/library/python/prettytable-39
-    pkg:/library/python/pybonjour-35
     pkg:/library/python/pybonjour-39
-    pkg:/library/python/pycurl-35
     pkg:/library/python/pycurl-39
-    pkg:/library/python/pyopenssl-35
     pkg:/library/python/pyopenssl-39
-    pkg:/library/python/pyyaml-35
     pkg:/library/python/pyyaml-39
-    pkg:/library/python/rapidjson-35
     pkg:/library/python/rapidjson-39
-    pkg:/library/python/six-35
     pkg:/library/python/six-39
     pkg:/locale/en
     pkg:/network/netcat
     pkg:/package/svr4
-    pkg:/runtime/python-35
     pkg:/runtime/python-39
     pkg:/service/network/dns/mdns
     pkg:/shell/bash
@@ -58,7 +40,6 @@
     pkg:/system/library/dbus
     pkg:/system/library/gcc-4-runtime
     pkg:/system/library/math
-    pkg:/system/library/python/libbe-35
     pkg:/system/library/python/libbe-39
     pkg:/system/library/security/crypto
     pkg:/system/network
@@ -70,5 +51,5 @@
     pkg:/text/locale
     pkg:/text/tidy
     pkg:/web/server/apache-24
-    pkg:/web/server/apache-24/module/apache-wsgi-35
+    pkg:/web/server/apache-24/module/apache-wsgi-39
     pkg:/web/wget

@@ -475,9 +475,4 @@ depend type=require fmri=crypto/ca-certificates
 depend type=require fmri=library/python/cffi
 depend type=require fmri=library/python/prettytable
 depend type=require fmri=locale/en
-# These usually come in as dependencies of the install/beadm package, but
-# during the transition to python 3.9, we need to ensure we have both
-# (and since we have a specific dependency on the python libbe module,
-#  it's probably a good idea anyway)
-depend type=require fmri=system/library/python/libbe-35
 depend type=require fmri=system/library/python/libbe-39
