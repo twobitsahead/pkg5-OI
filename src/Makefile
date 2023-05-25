@@ -38,7 +38,6 @@ packages := TARGET = install
 test := TARGET = test
 
 JOBS = 8
-CC = gcc
 
 SUBDIRS=brand zoneproxy util/mkcert
 
