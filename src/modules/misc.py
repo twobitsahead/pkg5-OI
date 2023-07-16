@@ -115,12 +115,12 @@ Service Request about this issue including the information above and this
 message.""").format(version=VERSION)
 
 def get_release_notes_url():
-        """Return a release note URL pointing to the correct release notes
-           for this version"""
+        """Return a URL pointing to release notes"""
+        # Note: Would ideally return a release version specific URL
 
         # TBD: replace with a call to api.info() that can return a "release"
         # attribute of form YYYYMM against the SUNWsolnm package
-        return "https://docs.openindiana.org/release-notes/latest-changes/"
+        return "https://www.openindiana.org/"
 
 def time_to_timestamp(t):
         """convert seconds since epoch to %Y%m%dT%H%M%SZ format"""
