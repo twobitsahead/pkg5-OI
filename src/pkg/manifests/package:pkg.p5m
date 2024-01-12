@@ -478,5 +478,6 @@ depend type=require fmri=crypto/ca-certificates
 # CFFI import is done in C code, so it isn't picked up by pkgdepend
 depend type=require fmri=library/python/cffi
 depend type=require fmri=library/python/prettytable
+depend type=require fmri=library/python/six-39
 depend type=require fmri=locale/en
 depend type=require fmri=system/library/python/libbe-39
