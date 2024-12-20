@@ -635,6 +635,7 @@ def _list_inventory(op, api_inst, pargs,
                 pkg_list = api.ImageInterface.LIST_UPGRADABLE
 	    elif list_remote:
 				pkg_list = api.ImageInterface.LIST_REMOTE
+
         # Each pattern in pats can be a partial or full FMRI, so
         # extract the individual components.  These patterns are
         # transformed here so that partial failure can be detected

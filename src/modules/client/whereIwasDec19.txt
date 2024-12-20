@@ -1,0 +1,3 @@
+~/programming/illumos/illumos-gate/usr/src/pkg
+
+~/programming/pkg5-OI/src/modules/client/options.py
